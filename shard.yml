@@ -1,0 +1,13 @@
+name: qit
+version: 0.1.0
+
+authors:
+  - Quin <TheQuinbox@gmail.com>
+
+targets:
+  qit:
+    main: src/qit.cr
+
+crystal: '>= 1.17.1'
+
+license: MIT
