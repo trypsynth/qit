@@ -1,0 +1,1 @@
+@shards build --static --release
