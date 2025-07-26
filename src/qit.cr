@@ -7,6 +7,7 @@ def usage : Nil
     amend <message>: amend the last commit with a new message.
     last: view the last commit in a friendly format.
     log: show the commit log in a readable format.
+    reset: hard reset to the last commit, discarding all local changes.
     undo: undo the last commit while keeping changes intact.
   USAGE
 end
@@ -43,6 +44,8 @@ when "last"
   git "log", "-1", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
 when "log"
   git "log", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
+when "reset"
+  git "reset", "--hard"
 when "undo"
   git "reset", "--soft", "HEAD~1"
 else
