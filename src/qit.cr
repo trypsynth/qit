@@ -5,7 +5,7 @@ def usage : Nil
   Available commands:
     acp <message>: add all files, commit with the specified message, and push.
     amend <message>: amend the last commit with a new message.
-    last: view the most recent commit message.
+    last: view the last commit in a friendly format.
     log: show the commit log in a readable format.
     undo: undo the last commit while keeping changes intact.
   USAGE
