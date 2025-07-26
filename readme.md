@@ -12,4 +12,5 @@ Usage: `qit <command> [<arguments>...]`
 * amend <message>: amend the last commit with a new message.
 * last: view the last commit in a friendly format.
 * log: show the commit log in a readable format.
+* reset: hard reset to the last commit, discarding all local changes.
 * undo: undo the last commit while keeping changes intact.
