@@ -7,6 +7,7 @@ def usage
   Available commands:
     acp <message>: add all files, commit with message, and push.
     amend <message>: amend the last commit with a new message.
+    db <name>: delete the local branch <name>.
     ignore <templates>: download .gitignore template(s) from gitignore.io.
     ignore list: show available templates from gitignore.io.
     last [<number>]: show the last <number> commits (default: 1).
@@ -32,6 +33,20 @@ def get_commit_message(prefix : String = "") : String
     exit 1
   end
   ARGV[1..].join(" ")
+end
+
+def delete_branch(name : String)
+  current = `git rev-parse --abbrev-ref HEAD`.strip
+  if current == name
+    STDERR.puts "Cannot delete current branch #{name}."
+    exit 1
+  end
+  existing = `git branch --list #{name}`.strip
+  if existing.empty?
+    STDERR.puts "Branch '#{name}' does not exist."
+    exit 1
+  end
+  git "branch", "-d", name
 end
 
 def download_gitignore(templates : String)
@@ -127,6 +142,14 @@ when "acp"
 when "amend"
   message = get_commit_message "new"
   git "commit", "--amend", "--reset", "-m", message
+when "db"
+  branch = ARGV[1]?
+  unless branch && !branch.empty?
+    STDERR.puts "Missing branch name."
+    usage
+    exit 1
+  end
+  delete_branch branch
 when "ignore"
   if ARGV[1]?.try(&.downcase) == "list"
     list_gitignore_templates
