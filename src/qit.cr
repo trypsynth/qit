@@ -1,4 +1,4 @@
-def usage : Nil
+def usage
   puts <<-USAGE
   Qit - Quin's tiny Git helper.
   Usage: qit <command> [<args>...]
@@ -12,7 +12,7 @@ def usage : Nil
   USAGE
 end
 
-def git(*args : String) : Nil
+def git(*args : String)
   abort "Command 'git #{args.join(" ")}' failed." unless Process.run("git", args, output: STDOUT, error: STDERR).success?
 end
 
@@ -41,7 +41,8 @@ when "amend"
   message = get_commit_message "new"
   git "commit", "--amend", "--reset", "-m", message
 when "last"
-  git "log", "-1", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
+  count = ARGV[1]?.try(&.to_i?) || 1
+  git "log", "-#{count}", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
 when "log"
   git "log", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
 when "reset"
