@@ -1,3 +1,5 @@
+require "http/client"
+
 def usage
   puts <<-USAGE
   Qit - Quin's tiny Git helper.
@@ -5,6 +7,7 @@ def usage
   Available commands:
     acp <message>: add all files, commit with the specified message, and push.
     amend <message>: amend the last commit with a new message.
+    ignore <Template>: download a .gitignore template from GitHub.
     last [<number>]: show the last <number> commits (default: 1).
     log: show the commit log in a readable format.
     reset: hard reset to the last commit, discarding all local changes.
@@ -26,6 +29,20 @@ def get_commit_message(prefix : String = "") : String
   ARGV[1..].join(" ")
 end
 
+def download_gitignore_template(template : String)
+  url = "https://raw.githubusercontent.com/github/gitignore/main/#{template}.gitignore"
+  puts "Downloading .gitignore template from #{url}"
+  begin
+    response = HTTP::Client.get(url)
+    File.write(".gitignore", response.body)
+    puts "Downloaded and saved as .gitignore"
+  rescue ex
+    STDERR.puts "Failed to download template '#{template}'. Check if the name is correct and case-sensitive."
+    STDERR.puts ex.message
+    exit 1
+  end
+end
+
 if ARGV.empty?
   usage
   exit 1
@@ -40,6 +57,14 @@ when "acp"
 when "amend"
   message = get_commit_message "new"
   git "commit", "--amend", "--reset", "-m", message
+when "ignore"
+  template = ARGV[1]?
+  unless template
+    STDERR.puts "Missing template name."
+    usage
+    exit 1
+  end
+  download_gitignore_template template
 when "last"
   count = ARGV[1]?.try(&.to_i?) || 1
   git "log", "-#{count}", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
