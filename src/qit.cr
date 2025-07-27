@@ -1,22 +1,24 @@
 require "http/client"
 
+USAGE_TEXT = <<-USAGE
+Qit - Quin's tiny Git helper.
+Usage: qit <command> [<args>...]
+Available commands:
+  acp <message>: add all files, commit with message, and push.
+  amend <message>: amend the last commit with a new message.
+  db <name>: delete the local branch <name>.
+  ignore <templates>: download .gitignore template(s) from gitignore.io.
+  ignore list: show available templates from gitignore.io.
+  last [<number>]: show the last <number> commits (default: 1).
+  log: show commit history in readable format.
+  nb <name>: switch to branch <name>, creating it if it doesn't exist.
+  reset: hard reset to last commit, discarding all changes.
+  status: show simplified summary of working directory changes.
+  undo: undo last commit while keeping changes intact.
+USAGE
+
 def usage
-  puts <<-USAGE
-  Qit - Quin's tiny Git helper.
-  Usage: qit <command> [<args>...]
-  Available commands:
-    acp <message>: add all files, commit with message, and push.
-    amend <message>: amend the last commit with a new message.
-    db <name>: delete the local branch <name>.
-    ignore <templates>: download .gitignore template(s) from gitignore.io.
-    ignore list: show available templates from gitignore.io.
-    last [<number>]: show the last <number> commits (default: 1).
-    log: show commit history in readable format.
-    nb <name>: switch to branch <name>, creating it if it doesn't exist.
-    reset: hard reset to last commit, discarding all changes.
-    status: show simplified summary of working directory changes.
-    undo: undo last commit while keeping changes intact.
-  USAGE
+  puts USAGE_TEXT
 end
 
 def git(*args : String)
@@ -25,66 +27,70 @@ def git(*args : String)
   end
 end
 
+def error_exit(message : String)
+  STDERR.puts message
+  usage
+  exit 1
+end
+
 def get_commit_message(prefix : String = "") : String
-  if ARGV.size < 2
-    desc = prefix.empty? ? "commit message" : "#{prefix} commit message"
-    STDERR.puts "Missing #{desc}."
-    usage
-    exit 1
-  end
-  ARGV[1..].join(" ")
+  return ARGV[1..].join(" ") if ARGV.size >= 2
+  desc = prefix.empty? ? "commit message" : "#{prefix} commit message"
+  error_exit "Missing #{desc}."
+end
+
+def get_current_branch : String
+  `git rev-parse --abbrev-ref HEAD`.strip
+end
+
+def branch_exists?(name : String) : Bool
+  !`git branch --list #{name}`.strip.empty?
 end
 
 def delete_branch(name : String)
-  current = `git rev-parse --abbrev-ref HEAD`.strip
-  if current == name
-    STDERR.puts "Cannot delete current branch #{name}."
-    exit 1
-  end
-  existing = `git branch --list #{name}`.strip
-  if existing.empty?
-    STDERR.puts "Branch '#{name}' does not exist."
-    exit 1
-  end
+  current = get_current_branch
+  error_exit "Cannot delete current branch #{name}." if current == name
+  error_exit "Branch '#{name}' does not exist." unless branch_exists?(name)
   git "branch", "-d", name
+end
+
+def http_request(url : String, &block : HTTP::Client::Response -> Nil)
+  response = HTTP::Client.get(url)
+  yield response
+rescue ex
+  STDERR.puts "Failed to fetch from #{url}: #{ex.message}"
+  exit 1
 end
 
 def download_gitignore(templates : String)
   url = "https://www.toptal.com/developers/gitignore/api/#{templates}"
-  response = HTTP::Client.get(url)
-  if response.status_code == 200
-    File.write(".gitignore", response.body)
-    puts "Downloaded .gitignore for: #{templates}"
-  else
-    STDERR.puts "Error: HTTP #{response.status_code} from gitignore.io"
-    exit 1
+  http_request(url) do |response|
+    if response.status_code == 200
+      File.write(".gitignore", response.body)
+      puts "Downloaded .gitignore for: #{templates}"
+    else
+      STDERR.puts "Error: HTTP #{response.status_code} from gitignore.io"
+      exit 1
+    end
   end
-rescue ex
-  STDERR.puts "Failed to fetch from gitignore.io: #{ex.message}"
-  exit 1
 end
 
 def list_gitignore_templates
   url = "https://www.toptal.com/developers/gitignore/api/list?format=lines"
-  response = HTTP::Client.get(url)
-  if response.status_code == 200
-    puts "Available gitignore templates:"
-    puts response.body
-  else
-    STDERR.puts "Error fetching list. HTTP #{response.status_code}"
+  http_request(url) do |response|
+    if response.status_code == 200
+      puts "Available gitignore templates:"
+      puts response.body
+    else
+      STDERR.puts "Error fetching list. HTTP #{response.status_code}"
+    end
   end
-rescue ex
-  STDERR.puts "Error fetching template list: #{ex.message}"
 end
 
 def switch_or_create_branch(name : String)
-  current = `git rev-parse --abbrev-ref HEAD`.strip
-  if current == name
-    puts "Already on branch #{name}."
-    return
-  end
-  existing = `git branch --list #{name}`.strip
-  if !existing.empty?
+  current = get_current_branch
+  return puts "Already on branch #{name}." if current == name
+  if branch_exists?(name)
     puts "Branch #{name} already exists. Switching to it..."
     git "checkout", name
   else
@@ -92,7 +98,7 @@ def switch_or_create_branch(name : String)
   end
 end
 
-def show_status
+def get_git_status : {Array(String), Array(String)}
   output = IO::Memory.new
   success = Process.run("git", ["status", "--porcelain"], output: output)
   unless success
@@ -104,20 +110,17 @@ def show_status
   output.rewind
   output.each_line do |line|
     next if line.strip.empty?
-    x = line[0]?
-    y = line[1]?
+    x, y = line[0]?, line[1]?
     file = line[3..].strip
-    if x != ' ' && x != '?'
-      staged << file
-    end
-    if y != ' '
-      unstaged << file
-    end
+    staged << file if x != ' ' && x != '?'
+    unstaged << file if y != ' '
   end
-  if staged.empty? && unstaged.empty?
-    puts "Working tree clean."
-    return
-  end
+  {staged, unstaged}
+end
+
+def show_status
+  staged, unstaged = get_git_status
+  return puts "Working tree clean." if staged.empty? && unstaged.empty?
   unless staged.empty?
     puts "Staged for commit:"
     staged.each { |f| puts "  #{f}" }
@@ -144,22 +147,16 @@ when "amend"
   git "commit", "--amend", "--reset", "-m", message
 when "db"
   branch = ARGV[1]?
-  unless branch && !branch.empty?
-    STDERR.puts "Missing branch name."
-    usage
-    exit 1
-  end
+  error_exit "Missing branch name." unless branch && !branch.empty?
   delete_branch branch
 when "ignore"
-  if ARGV[1]?.try(&.downcase) == "list"
+  case ARGV[1]?.try(&.downcase)
+  when "list"
     list_gitignore_templates
-    exit
-  elsif template = ARGV[1]?
-    download_gitignore template
+  when .nil?
+    error_exit "Missing template name(s)."
   else
-    STDERR.puts "Missing template name(s)."
-    usage
-    exit 1
+    download_gitignore ARGV[1]
   end
 when "last"
   count = ARGV[1]?.try(&.to_i?) || 1
@@ -168,11 +165,7 @@ when "log"
   git "log", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
 when "nb"
   branch = ARGV[1]?
-  unless branch && !branch.empty?
-    STDERR.puts "Missing branch name."
-    usage
-    exit 1
-  end
+  error_exit "Missing branch name." unless branch && !branch.empty?
   switch_or_create_branch branch
 when "reset"
   git "reset", "--hard"
@@ -181,7 +174,5 @@ when "status"
 when "undo"
   git "reset", "--soft", "HEAD~1"
 else
-  STDERR.puts "Unknown command: #{command}."
-  usage
-  exit 1
+  error_exit "Unknown command: #{command}."
 end
