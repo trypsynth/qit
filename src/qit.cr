@@ -32,33 +32,30 @@ end
 
 def download_gitignore(templates : String)
   url = "https://www.toptal.com/developers/gitignore/api/#{templates}"
-  begin
-    response = HTTP::Client.get(url)
-    unless response.status_code == 200
-      STDERR.puts "Error: HTTP #{response.status_code} from gitignore.io"
-      exit 1
-    end
+  response = HTTP::Client.get(url)
+  if response.status_code == 200
     File.write(".gitignore", response.body)
     puts "Downloaded .gitignore for: #{templates}"
-  rescue ex
-    STDERR.puts "Failed to fetch from gitignore.io: #{ex.message}"
+  else
+    STDERR.puts "Error: HTTP #{response.status_code} from gitignore.io"
     exit 1
   end
+rescue ex
+  STDERR.puts "Failed to fetch from gitignore.io: #{ex.message}"
+  exit 1
 end
 
 def list_gitignore_templates
   url = "https://www.toptal.com/developers/gitignore/api/list?format=lines"
-  begin
-    response = HTTP::Client.get(url)
-    if response.status_code == 200
-      puts "Available gitignore templates:"
-      puts response.body
-    else
-      STDERR.puts "Error fetching list. HTTP #{response.status_code}"
-    end
-  rescue ex
-    STDERR.puts "Error fetching template list: #{ex.message}"
+  response = HTTP::Client.get(url)
+  if response.status_code == 200
+    puts "Available gitignore templates:"
+    puts response.body
+  else
+    STDERR.puts "Error fetching list. HTTP #{response.status_code}"
   end
+rescue ex
+  STDERR.puts "Error fetching template list: #{ex.message}"
 end
 
 if ARGV.empty?
