@@ -19,6 +19,7 @@ A `build.bat` script is provided in the root of the repository to easily allow f
 * `last [<number>]`: show the last `<number>` commits (default: 1).
 * `log`: show the commit log in a readable format.
 * `nb <name>`: switch to branch `<name>`, creating it if it doesn't exist.
+* new: pull and list recent commits.
 * `reset`: hard reset to the last commit, discarding all local changes.
 * `status`: show simplified summary of working directory changes.
 * `undo`: undo the last commit while keeping changes intact.

@@ -13,6 +13,7 @@ Available commands:
   last [<number>]: show the last <number> commits (default: 1).
   log: show commit history in readable format.
   nb <name>: switch to branch <name>, creating it if it doesn't exist.
+  new: pull and list recent commits.
   reset: hard reset to last commit, discarding all changes.
   status: show simplified summary of working directory changes.
   undo: undo last commit while keeping changes intact.
@@ -22,8 +23,10 @@ def usage
   puts USAGE_TEXT
 end
 
-def git(*args : String)
-  unless Process.run("git", args, output: STDOUT, error: STDERR).success?
+def git(*args : String, quiet : Bool = false)
+  output = quiet ? Process::Redirect::Close : STDOUT
+  error  = quiet ? Process::Redirect::Close : STDERR
+  unless Process.run("git", args, output: output, error: error).success?
     abort "git #{args.join(" ")} failed."
   end
 end
@@ -170,6 +173,16 @@ when "nb"
   branch = ARGV[1]?
   error_exit "Missing branch name." unless branch && !branch.empty?
   switch_or_create_branch branch
+when "new"
+  old_head = `git rev-parse HEAD`.strip
+  git "pull", quiet: true
+  new_head = `git rev-parse HEAD`.strip
+  if old_head == new_head
+    puts "Nothing new."
+  else
+    puts "Commits since last pull:"
+    git "log", "#{old_head}..#{new_head}", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
+  end
 when "reset"
   print "This will discard all changes. Continue? (y/N) "
   confirm = gets.try(&.strip.downcase)
