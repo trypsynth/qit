@@ -18,7 +18,9 @@ def usage
 end
 
 def git(*args : String)
-  abort "Command 'git #{args.join(" ")}' failed." unless Process.run("git", args, output: STDOUT, error: STDERR).success?
+  unless Process.run("git", args, output: STDOUT, error: STDERR).success?
+    abort "git #{args.join(" ")} failed."
+  end
 end
 
 def get_commit_message(prefix : String = "") : String
@@ -86,11 +88,11 @@ def show_status
     return
   end
   unless staged.empty?
-    puts "Addede to commit:"
+    puts "Staged for commit:"
     staged.each { |f| puts "  #{f}" }
   end
   unless unstaged.empty?
-    puts "Not added to commit:"
+    puts "Not staged for commit:"
     unstaged.each { |f| puts "  #{f}" }
   end
 end
