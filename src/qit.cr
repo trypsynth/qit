@@ -11,6 +11,7 @@ def usage
     ignore list: show available templates from gitignore.io.
     last [<number>]: show the last <number> commits (default: 1).
     log: show commit history in readable format.
+    nb <name>: switch to branch <name>, creating it if it doesn't exist.
     reset: hard reset to last commit, discarding all changes.
     status: show simplified summary of working directory changes.
     undo: undo last commit while keeping changes intact.
@@ -59,6 +60,21 @@ def list_gitignore_templates
   end
 rescue ex
   STDERR.puts "Error fetching template list: #{ex.message}"
+end
+
+def switch_or_create_branch(name : String)
+  current = `git rev-parse --abbrev-ref HEAD`.strip
+  if current == name
+    puts "Already on branch #{name}."
+    return
+  end
+  existing = `git branch --list #{name}`.strip
+  if !existing.empty?
+    puts "Branch #{name} already exists. Switching to it..."
+    git "checkout", name
+  else
+    git "checkout", "-b", name
+  end
 end
 
 def show_status
@@ -127,6 +143,14 @@ when "last"
   git "log", "-#{count}", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
 when "log"
   git "log", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
+when "nb"
+  branch = ARGV[1]?
+  unless branch && !branch.empty?
+    STDERR.puts "Missing branch name."
+    usage
+    exit 1
+  end
+  switch_or_create_branch branch
 when "reset"
   git "reset", "--hard"
 when "status"
