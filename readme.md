@@ -12,6 +12,7 @@ A `build.bat` script is provided in the root of the repository to easily allow f
 ### Available commands:
 * `acp <message>`: add all files, commit with the specified message, and push.
 * `amend <message>`: amend the last commit with a new message.
+* cp <message>: commit changes to tracked files with message, and push.
 * `db <name>`: delete the local branch `<name>`.
 * help, -h, --help: show this help message.
 * `ignore <templates>`: download .gitignore template(s) from gitignore.io.

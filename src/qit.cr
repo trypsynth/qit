@@ -6,6 +6,7 @@ Usage: qit <command> [<args>...]
 Available commands:
   acp <message>: add all files, commit with message, and push.
   amend <message>: amend the last commit with a new message.
+  cp <message>: commit changes to tracked files with message, and push.
   db <name>: delete the local branch <name>.\
   help, -h, --help: show this help message.
   ignore <templates>: download .gitignore template(s) from gitignore.io.
@@ -25,7 +26,7 @@ end
 
 def git(*args : String, quiet : Bool = false)
   output = quiet ? Process::Redirect::Close : STDOUT
-  error  = quiet ? Process::Redirect::Close : STDERR
+  error = quiet ? Process::Redirect::Close : STDERR
   unless Process.run("git", args, output: output, error: error).success?
     abort "git #{args.join(" ")} failed."
   end
@@ -149,6 +150,10 @@ when "acp"
 when "amend"
   message = get_commit_message "new"
   git "commit", "--amend", "--reset", "-m", message
+when "cp"
+  message = get_commit_message
+  git "commit", "-am", message
+  git "push"
 when "db"
   branch = ARGV[1]?
   error_exit "Missing branch name." unless branch && !branch.empty?
