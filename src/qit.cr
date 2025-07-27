@@ -149,6 +149,8 @@ when "db"
   branch = ARGV[1]?
   error_exit "Missing branch name." unless branch && !branch.empty?
   delete_branch branch
+when "help", "--help", "-h"
+  usage
 when "ignore"
   case ARGV[1]?.try(&.downcase)
   when "list"
