@@ -6,7 +6,8 @@ Usage: qit <command> [<args>...]
 Available commands:
   acp <message>: add all files, commit with message, and push.
   amend <message>: amend the last commit with a new message.
-  db <name>: delete the local branch <name>.
+  db <name>: delete the local branch <name>.\
+  help, -h, --help: show this help message.
   ignore <templates>: download .gitignore template(s) from gitignore.io.
   ignore list: show available templates from gitignore.io.
   last [<number>]: show the last <number> commits (default: 1).
