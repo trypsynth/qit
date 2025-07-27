@@ -10,7 +10,7 @@ Usage: `qit <command> [<arguments>...]`
 ### Available commands:
 * acp <message>: add all files, commit with the specified message, and push.
 * amend <message>: amend the last commit with a new message.
-* last: view the last commit in a friendly format.
+* last [<number>]: show the last <number> commits (default: 1).
 * log: show the commit log in a readable format.
 * reset: hard reset to the last commit, discarding all local changes.
 * undo: undo the last commit while keeping changes intact.
