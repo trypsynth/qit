@@ -86,11 +86,11 @@ def show_status
     return
   end
   unless staged.empty?
-    puts "Staged for commit:"
+    puts "Addede to commit:"
     staged.each { |f| puts "  #{f}" }
   end
   unless unstaged.empty?
-    puts "Not staged:"
+    puts "Not added to commit:"
     unstaged.each { |f| puts "  #{f}" }
   end
 end
