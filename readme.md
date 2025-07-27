@@ -5,11 +5,13 @@ Qit is a tiny wrapper around the Git command line tool, to make everyday tasks e
 `shards build --static --release`
 
 ## Usage
-Usage: `qit <command> [<arguments>...]`
+`qit <command> [<arguments>...]`
 
 ### Available commands:
 * acp <message>: add all files, commit with the specified message, and push.
 * amend <message>: amend the last commit with a new message.
+* ignore <templates>: download .gitignore template(s) from gitignore.io.
+* ignore list: show available templates from gitignore.io.
 * last [<number>]: show the last <number> commits (default: 1).
 * log: show the commit log in a readable format.
 * reset: hard reset to the last commit, discarding all local changes.
