@@ -170,6 +170,9 @@ when "nb"
   error_exit "Missing branch name." unless branch && !branch.empty?
   switch_or_create_branch branch
 when "reset"
+  print "This will discard all changes. Continue? (y/N) "
+  confirm = gets.try(&.strip.downcase)
+  exit unless confirm == "y"
   git "reset", "--hard"
 when "status"
   show_status
