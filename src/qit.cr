@@ -20,7 +20,6 @@ Available commands:
   reset: hard reset to last commit, discarding all changes.
   status: show simplified summary of working directory changes.
   undo: undo last commit while keeping changes intact.
-  -h, --help: show this message and exit.
 USAGE
 
 def git(*args : String, quiet : Bool = false)
