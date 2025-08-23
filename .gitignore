@@ -2,4 +2,6 @@
 /lib/
 /bin/
 /.shards/
+*.dll
 *.dwarf
+*.exe

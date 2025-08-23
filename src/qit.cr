@@ -1,5 +1,7 @@
 require "http/client"
 
+COMMIT_FORMAT = "%h %an: %s (%ad)."
+DATE_FORMAT   = "%Y-%m-%d %H:%M:%S"
 USAGE_TEXT = <<-USAGE
 Qit - Quin's tiny Git helper.
 Usage: qit <command> [<args>...]
@@ -18,11 +20,8 @@ Available commands:
   reset: hard reset to last commit, discarding all changes.
   status: show simplified summary of working directory changes.
   undo: undo last commit while keeping changes intact.
+  -h, --help: show this message and exit.
 USAGE
-
-def usage
-  puts USAGE_TEXT
-end
 
 def git(*args : String, quiet : Bool = false)
   output = quiet ? Process::Redirect::Close : STDOUT
@@ -34,14 +33,15 @@ end
 
 def error_exit(message : String)
   STDERR.puts message
-  usage
   exit 1
 end
 
-def get_commit_message(prefix : String = "") : String
-  return ARGV[1..].join(" ") if ARGV.size >= 2
-  desc = prefix.empty? ? "commit message" : "#{prefix} commit message"
-  error_exit "Missing #{desc}."
+def require_args(args : Array(String), missing_message : String)
+  error_exit missing_message if args.empty?
+end
+
+def show_help
+  puts USAGE_TEXT
 end
 
 def get_current_branch : String
@@ -136,49 +136,52 @@ def show_status
   end
 end
 
-if ARGV.empty?
-  usage
-  exit 1
-end
-command = ARGV[0].downcase
-case command
-when "acp"
-  message = get_commit_message
+def handle_acp_command(args : Array(String))
+  require_args(args, "Missing commit message.")
+  message = args.join(" ")
   git "add", "."
   git "commit", "-m", message
   git "push"
-when "amend"
-  message = get_commit_message "new"
+end
+
+def handle_amend_command(args : Array(String))
+  require_args(args, "Missing new commit message.")
+  message = args.join(" ")
   git "commit", "--amend", "--reset", "-m", message
-when "cp"
-  message = get_commit_message
+end
+
+def handle_cp_command(args : Array(String))
+  require_args(args, "Missing commit message.")
+  message = args.join(" ")
   git "commit", "-am", message
   git "push"
-when "db"
-  branch = ARGV[1]?
-  error_exit "Missing branch name." unless branch && !branch.empty?
-  delete_branch branch
-when "help", "--help", "-h"
-  usage
-when "ignore"
-  case ARGV[1]?.try(&.downcase)
-  when "list"
+end
+
+def handle_db_command(args : Array(String))
+  require_args(args, "Missing branch name.")
+  delete_branch args[0]
+end
+
+def handle_ignore_command(args : Array(String))
+  require_args(args, "Missing template name(s). Use 'ignore list' to see available templates.")
+  if args[0].downcase == "list"
     list_gitignore_templates
-  when .nil?
-    error_exit "Missing template name(s)."
   else
-    download_gitignore ARGV[1]
+    download_gitignore args[0]
   end
-when "last"
-  count = ARGV[1]?.try(&.to_i?) || 1
-  git "log", "-#{count}", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
-when "log"
-  git "log", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
-when "nb"
-  branch = ARGV[1]?
-  error_exit "Missing branch name." unless branch && !branch.empty?
-  switch_or_create_branch branch
-when "new"
+end
+
+def handle_last_command(args : Array(String))
+  count = args[0]?.try(&.to_i?) || 1
+  git "log", "-#{count}", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
+end
+
+def handle_nb_command(args : Array(String))
+  require_args(args, "Missing branch name.")
+  switch_or_create_branch args[0]
+end
+
+def handle_new_command(args : Array(String))
   old_head = `git rev-parse HEAD`.strip
   git "pull", quiet: true
   new_head = `git rev-parse HEAD`.strip
@@ -186,17 +189,50 @@ when "new"
     puts "Nothing new."
   else
     puts "Commits since last pull:"
-    git "log", "#{old_head}..#{new_head}", "--pretty=format:%h %an: %s (%ad).", "--date=format:%Y-%m-%d %H:%M:%S"
+    git "log", "#{old_head}..#{new_head}", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
   end
-when "reset"
+end
+
+def handle_reset_command(args : Array(String))
   print "This will discard all changes. Continue? (y/N) "
   confirm = gets.try(&.strip.downcase)
   exit unless confirm == "y"
   git "reset", "--hard"
+end
+
+if ARGV.empty?
+  show_help
+  exit 1
+end
+command = ARGV[0].downcase
+args = ARGV[1..]
+case command
+when "acp"
+  handle_acp_command(args)
+when "amend"
+  handle_amend_command(args)
+when "cp"
+  handle_cp_command(args)
+when "db"
+  handle_db_command(args)
+when "ignore"
+  handle_ignore_command(args)
+when "last"
+  handle_last_command(args)
+when "log"
+  git "log", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
+when "nb"
+  handle_nb_command(args)
+when "new"
+  handle_new_command(args)
+when "reset"
+  handle_reset_command(args)
 when "status"
   show_status
 when "undo"
   git "reset", "--soft", "HEAD~1"
+when "-h", "--help", "help"
+  show_help
 else
   error_exit "Unknown command: #{command}."
 end
