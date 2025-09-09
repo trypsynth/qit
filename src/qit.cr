@@ -189,6 +189,7 @@ def handle_new_command(args : Array(String))
   else
     puts "Commits since last pull:"
     git "log", "#{old_head}..#{new_head}", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
+puts
   end
 end
 
