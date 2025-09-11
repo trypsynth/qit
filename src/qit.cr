@@ -221,6 +221,7 @@ end
 def handle_last_command(args : Array(String))
   count = args[0]?.try(&.to_i?) || 1
   git "log", "-#{count}", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
+  puts
 end
 
 def handle_nb_command(args : Array(String))
