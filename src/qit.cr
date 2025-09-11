@@ -1,4 +1,5 @@
 require "http/client"
+require "json"
 
 COMMIT_FORMAT = "%h %an: %s (%ad)."
 DATE_FORMAT   = "%Y-%m-%d %H:%M:%S"
@@ -11,9 +12,11 @@ Available commands:
   cp <message>: commit changes to tracked files with message, and push.
   db <name>: delete the local branch <name>.
   help, -h, --help: show this help message.
+  ignore list: show available gitignore templates from gitignore.io.
   ignore <templates>: download .gitignore template(s) from gitignore.io.
-  ignore list: show available templates from gitignore.io.
   last [<number>]: show the last <number> commits (default: 1).
+  license list: show available licenses from GitHub.
+  license <name>: download license template from GitHub.
   log: show commit history in readable format.
   nb <name>: switch to branch <name>, creating it if it doesn't exist.
   new: pull and list recent commits.
@@ -87,6 +90,42 @@ def list_gitignore_templates
       puts response.body
     else
       STDERR.puts "Error fetching list. HTTP #{response.status_code}"
+    end
+  end
+end
+
+def list_github_licenses
+  url = "https://api.github.com/licenses"
+  http_request(url) do |response|
+    if response.status_code == 200
+      licenses = Array(JSON::Any).from_json(response.body)
+      puts "Available licenses:"
+      licenses.each do |license|
+        key = license["key"].as_s
+        name = license["name"].as_s
+        puts "#{key}: #{name}"
+      end
+    else
+      STDERR.puts "Error fetching licenses. HTTP #{response.status_code}"
+    end
+  end
+end
+
+def download_github_license(license_key : String)
+  url = "https://api.github.com/licenses/#{license_key}"
+  http_request(url) do |response|
+    if response.status_code == 200
+      license_data = JSON.parse(response.body)
+      license_body = license_data["body"].as_s
+      license_name = license_data["name"].as_s
+      File.write("LICENSE", license_body)
+      puts "Downloaded the #{license_name} license to LICENSE file."
+    elsif response.status_code == 404
+      STDERR.puts "License '#{license_key}' not found. Use 'qit license list' to see available licenses."
+      exit 1
+    else
+      STDERR.puts "Error: HTTP #{response.status_code} from GitHub API"
+      exit 1
     end
   end
 end
@@ -170,6 +209,15 @@ def handle_ignore_command(args : Array(String))
   end
 end
 
+def handle_license_command(args : Array(String))
+  require_args(args, "Missing license name or 'list'. Use 'license list' to see available licenses.")
+  if args[0].downcase == "list"
+    list_github_licenses
+  else
+    download_github_license args[0].downcase
+  end
+end
+
 def handle_last_command(args : Array(String))
   count = args[0]?.try(&.to_i?) || 1
   git "log", "-#{count}", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
@@ -189,7 +237,7 @@ def handle_new_command(args : Array(String))
   else
     puts "Commits since last pull:"
     git "log", "#{old_head}..#{new_head}", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
-puts
+    puts
   end
 end
 
@@ -219,6 +267,8 @@ when "ignore"
   handle_ignore_command(args)
 when "last"
   handle_last_command(args)
+when "license"
+  handle_license_command(args)
 when "log"
   git "log", "--pretty=format:#{COMMIT_FORMAT}", "--date=format:#{DATE_FORMAT}"
 when "nb"
