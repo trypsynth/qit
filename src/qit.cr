@@ -3,7 +3,7 @@ require "json"
 
 COMMIT_FORMAT = "%h %an: %s (%ad)."
 DATE_FORMAT   = "%Y-%m-%d %H:%M:%S"
-USAGE_TEXT = <<-USAGE
+USAGE_TEXT    = <<-USAGE
 Qit - Quin's tiny Git helper.
 Usage: qit <command> [<args>...]
 Available commands:
