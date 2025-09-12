@@ -1,6 +1,3 @@
-require "http/client"
-require "json"
-require "option_parser"
 require "./command_registry"
 
 module Qit
