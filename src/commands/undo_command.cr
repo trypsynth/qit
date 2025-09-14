@@ -1,4 +1,5 @@
 require "../command"
+require "../utils"
 
 module Qit::Commands
   class UndoCommand < Command

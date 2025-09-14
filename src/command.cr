@@ -1,6 +1,3 @@
-require "option_parser"
-require "./utils"
-
 abstract class Command
   abstract def name : String
   abstract def description : String
