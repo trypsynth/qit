@@ -15,7 +15,7 @@ module Qit::Commands
     end
 
     def execute(args : Array(String)) : Nil
-      confirm = Utils.prompt_single_key("This will discard all changes. Continue? (y/N) ")
+      confirm = Utils.prompt_for_key("This will discard all changes. Continue? (y/n) ")
       puts
       exit unless confirm.downcase == 'y'
       Utils.git "reset", "--hard"

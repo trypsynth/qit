@@ -39,7 +39,7 @@ module Utils
     !`git branch --list #{name}`.strip.empty?
   end
 
-  def prompt_single_key(prompt : String) : Char
+  def prompt_for_key(prompt : String) : Char
     print prompt
     STDOUT.flush
     {% if flag?(:win32) %}
