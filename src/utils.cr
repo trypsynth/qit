@@ -38,4 +38,51 @@ module Utils
   def branch_exists?(name : String) : Bool
     !`git branch --list #{name}`.strip.empty?
   end
+
+  def prompt_single_key(prompt : String) : Char
+    print prompt
+    STDOUT.flush
+    {% if flag?(:win32) %}
+      LibC._getch.chr
+    {% else %}
+      original_termios = uninitialized LibC::Termios
+      LibC.tcgetattr(0, pointerof(original_termios))
+      raw_termios = original_termios
+      raw_termios.c_lflag &= ~(LibC::ICANON | LibC::ECHO)
+      LibC.tcsetattr(0, LibC::TCSANOW, pointerof(raw_termios))
+      begin
+        char = STDIN.read_char
+        LibC.tcsetattr(0, LibC::TCSANOW, pointerof(original_termios))
+        char || '\0'
+      rescue
+        LibC.tcsetattr(0, LibC::TCSANOW, pointerof(original_termios))
+        '\0'
+      end
+    {% end %}
+  end
 end
+
+{% if flag?(:win32) %}
+  lib LibC
+    fun _getch : Int32
+  end
+{% else %}
+  lib LibC
+    struct Termios
+      c_iflag : UInt32
+      c_oflag : UInt32
+      c_cflag : UInt32
+      c_lflag : UInt32
+      c_cc : UInt8[20]
+      c_ispeed : UInt32
+      c_ospeed : UInt32
+    end
+
+    ICANON  = 2
+    ECHO    = 8
+    TCSANOW = 0
+
+    fun tcgetattr(fd : Int32, termios : Termios*) : Int32
+    fun tcsetattr(fd : Int32, optional_actions : Int32, termios : Termios*) : Int32
+  end
+{% end %}
