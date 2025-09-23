@@ -11,7 +11,7 @@ module Qit::Commands
     end
 
     def usage : String
-      "last [number]"
+      "last [<number>]"
     end
 
     def execute(args : Array(String)) : Nil
