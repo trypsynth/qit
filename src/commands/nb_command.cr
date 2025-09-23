@@ -10,6 +10,10 @@ module Qit::Commands
       "switch to the branch with  the specified name, creating it if it doesn't exist"
     end
 
+    def usage : String
+      "nb <branch_name>"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.require_args(args, "Missing branch name.")
       name = args[0]

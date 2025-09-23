@@ -10,6 +10,10 @@ module Qit::Commands
       "download .gitignore template(s) from gitignore.io or list available templates"
     end
 
+    def usage : String
+      "ignore <template_name|list>"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.require_args(args, "Missing template name(s). Use 'ignore list' to see available templates.")
       if args[0].downcase == "list"

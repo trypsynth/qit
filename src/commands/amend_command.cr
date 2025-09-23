@@ -10,6 +10,10 @@ module Qit::Commands
       "amend the last commit with a new message"
     end
 
+    def usage : String
+      "amend <message>"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.require_args(args, "Missing new commit message.")
       message = args.join(" ")

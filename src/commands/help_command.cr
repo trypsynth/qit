@@ -10,6 +10,10 @@ module Qit::Commands
       "show this help message"
     end
 
+    def usage : String
+      "help"
+    end
+
     def execute(args : Array(String)) : Nil
       puts <<-USAGE
       Qit - Quin's tiny Git helper.
@@ -17,7 +21,7 @@ module Qit::Commands
       Available commands:
       USAGE
       Qit::CommandRegistry.all.each do |name, command|
-        puts "  #{name}: #{command.description}."
+        puts "  #{command.usage}: #{command.description}."
       end
     end
   end

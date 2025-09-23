@@ -10,6 +10,10 @@ module Qit::Commands
       "delete the specified local branch"
     end
 
+    def usage : String
+      "db <branch_name>"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.require_args(args, "Missing branch name.")
       name = args[0]

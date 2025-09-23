@@ -11,6 +11,10 @@ module Qit::Commands
       "undo last commit while keeping changes intact"
     end
 
+    def usage : String
+      "undo"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.git "reset", "--soft", "HEAD~1"
     end

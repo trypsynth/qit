@@ -10,6 +10,10 @@ module Qit::Commands
       "hard reset to last commit, discarding all changes"
     end
 
+    def usage : String
+      "reset"
+    end
+
     def execute(args : Array(String)) : Nil
       print "This will discard all changes. Continue? (y/N) "
       confirm = gets.try(&.strip.downcase)

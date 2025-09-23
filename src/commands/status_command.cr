@@ -10,6 +10,10 @@ module Qit::Commands
       "show simplified summary of working directory changes"
     end
 
+    def usage : String
+      "status"
+    end
+
     def execute(args : Array(String)) : Nil
       staged, unstaged = get_git_status
       return puts "Working tree clean." if staged.empty? && unstaged.empty?

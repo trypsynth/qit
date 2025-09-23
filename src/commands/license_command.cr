@@ -11,6 +11,10 @@ module Qit::Commands
       "download license template from GitHub or list available licenses"
     end
 
+    def usage : String
+      "license <license_name|list>"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.require_args(args, "Missing license name or 'list'. Use 'license list' to see available licenses.")
       if args[0].downcase == "list"

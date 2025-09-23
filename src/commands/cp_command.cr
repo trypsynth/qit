@@ -10,6 +10,10 @@ module Qit::Commands
       "commit changes to tracked files with the specified message, and push"
     end
 
+    def usage : String
+      "cp <message>"
+    end
+
     def execute(args : Array(String)) : Nil
       Utils.require_args(args, "Missing commit message.")
       message = args.join(" ")

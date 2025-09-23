@@ -10,6 +10,10 @@ module Qit::Commands
       "pull and list recent commits"
     end
 
+    def usage : String
+      "new"
+    end
+
     def execute(args : Array(String)) : Nil
       old_head = `git rev-parse HEAD`.strip
       Utils.git "pull", quiet: true
