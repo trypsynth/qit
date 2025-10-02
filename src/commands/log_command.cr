@@ -16,6 +16,7 @@ module Qit::Commands
 
     def execute(args : Array(String)) : Nil
       Utils.git "log", "--pretty=format:#{Utils::COMMIT_FORMAT}", "--date=format:#{Utils::DATE_FORMAT}"
+      puts
     end
   end
 end
