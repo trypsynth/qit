@@ -68,20 +68,6 @@ end
   end
 {% else %}
   lib LibC
-    struct Termios
-      c_iflag : UInt32
-      c_oflag : UInt32
-      c_cflag : UInt32
-      c_lflag : UInt32
-      c_cc : UInt8[20]
-      c_ispeed : UInt32
-      c_ospeed : UInt32
-    end
-
-    ICANON  = 2
-    ECHO    = 8
-    TCSANOW = 0
-
     fun tcgetattr(fd : Int32, termios : Termios*) : Int32
     fun tcsetattr(fd : Int32, optional_actions : Int32, termios : Termios*) : Int32
   end
