@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -32,7 +33,7 @@ func downloadGitignore(templates string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP %d from gitignore.io", resp.StatusCode)
 	}
 	body, err := utils.ReadBody(resp)
@@ -53,7 +54,7 @@ func listGitignoreTemplates() error {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error fetching list: HTTP %d", resp.StatusCode)
 	}
 	body, err := utils.ReadBody(resp)

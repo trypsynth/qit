@@ -3,12 +3,19 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/trypsynth/qit/utils"
 )
+
+type gitHubLicense struct {
+	Key  string `json:"key"`
+	Name string `json:"name"`
+	Body string `json:"body"`
+}
 
 func NewLicenseCommand() *cobra.Command {
 	return &cobra.Command{
@@ -29,35 +36,27 @@ func NewLicenseCommand() *cobra.Command {
 func listGitHubLicenses() error {
 	url := "https://api.github.com/licenses"
 	headers := map[string]string{
-		"User-Agent": "qit-cli",
+		"User-Agent": utils.UserAgent,
 	}
 	resp, err := utils.HTTPGetWithHeaders(url, headers)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error fetching licenses: HTTP %d", resp.StatusCode)
 	}
-	var licenses []map[string]interface{}
 	body, err := utils.ReadBody(resp)
 	if err != nil {
 		return err
 	}
+	var licenses []gitHubLicense
 	if err := json.Unmarshal(body, &licenses); err != nil {
-		return err
+		return fmt.Errorf("failed to parse licenses: %w", err)
 	}
 	fmt.Println("Available licenses:")
 	for _, license := range licenses {
-		key, ok := license["key"].(string)
-		if !ok {
-			continue
-		}
-		name, ok := license["name"].(string)
-		if !ok {
-			continue
-		}
-		fmt.Printf("%s: %s\n", key, name)
+		fmt.Printf("%s: %s\n", license.Key, license.Name)
 	}
 	return nil
 }
@@ -65,38 +64,33 @@ func listGitHubLicenses() error {
 func downloadGitHubLicense(licenseKey string) error {
 	url := fmt.Sprintf("https://api.github.com/licenses/%s", licenseKey)
 	headers := map[string]string{
-		"User-Agent": "qit-cli",
+		"User-Agent": utils.UserAgent,
 	}
 	resp, err := utils.HTTPGetWithHeaders(url, headers)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 404 {
+	if resp.StatusCode == http.StatusNotFound {
 		return fmt.Errorf("license '%s' not found, use 'qit license list' to see available licenses", licenseKey)
 	}
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("HTTP %d from GitHub API", resp.StatusCode)
 	}
 	body, err := utils.ReadBody(resp)
 	if err != nil {
 		return err
 	}
-	var licenseData map[string]interface{}
-	if err := json.Unmarshal(body, &licenseData); err != nil {
+	var license gitHubLicense
+	if err := json.Unmarshal(body, &license); err != nil {
+		return fmt.Errorf("failed to parse license: %w", err)
+	}
+	if license.Body == "" {
+		return fmt.Errorf("invalid license data: missing body field")
+	}
+	if err := os.WriteFile("LICENSE", []byte(license.Body), 0644); err != nil {
 		return err
 	}
-	licenseBody, ok := licenseData["body"].(string)
-	if !ok {
-		return fmt.Errorf("invalid license data: missing or invalid 'body' field")
-	}
-	licenseName, ok := licenseData["name"].(string)
-	if !ok {
-		return fmt.Errorf("invalid license data: missing or invalid 'name' field")
-	}
-	if err := os.WriteFile("LICENSE", []byte(licenseBody), 0644); err != nil {
-		return err
-	}
-	fmt.Printf("Downloaded the %s license to LICENSE file.\n", licenseName)
+	fmt.Printf("Downloaded the %s license to LICENSE file.\n", license.Name)
 	return nil
 }
