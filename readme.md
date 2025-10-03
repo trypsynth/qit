@@ -1,10 +1,8 @@
 # Qit
-Qit is a tiny program written in Crystal, to make everyday tasks in git repositories easier and require less typing.
+Qit is a tiny CLI program written in Go, to make everyday tasks in git repositories easier and require less typing.
 
 ## Building
-`build.bat` and `build.sh` scripts are provided in the root of the repository to easily allow for building. Alternatively, run:
-
-`shards build --static --release`
+We use [Mage](https://magefile.org/) for building. Once the repo is cloned, simply typing `mage build` should give you a functional qit binary for your platform. If you want to build binaries for all platforms, run `mage buildAll`.
 
 ## Usage
 Usage: qit <command> [<args>...]
