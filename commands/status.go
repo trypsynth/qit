@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -46,8 +45,7 @@ func getGitStatus() ([]string, []string, error) {
 	cmd := exec.Command("git", "status", "--porcelain")
 	output, err := cmd.Output()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to get git status.")
-		os.Exit(1)
+		return nil, nil, fmt.Errorf("failed to get git status: %w", err)
 	}
 	var staged []string
 	var unstaged []string

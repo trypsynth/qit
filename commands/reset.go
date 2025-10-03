@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -15,10 +14,13 @@ func NewResetCommand() *cobra.Command {
 		Short: "hard reset to last commit, discarding all changes",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			confirm := utils.PromptForKey("This will discard all changes. Continue? (y/n) ")
+			confirm, err := utils.PromptForKey("This will discard all changes. Continue? (y/n) ")
 			fmt.Println()
+			if err != nil {
+				return err
+			}
 			if strings.ToLower(string(confirm)) != "y" {
-				os.Exit(0)
+				return fmt.Errorf("operation cancelled")
 			}
 			return utils.Git(false, "reset", "--hard")
 		},

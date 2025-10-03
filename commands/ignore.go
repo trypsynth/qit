@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
@@ -15,7 +14,9 @@ func NewIgnoreCommand() *cobra.Command {
 		Use:   "ignore <template_name|list>",
 		Short: "download .gitignore template(s) from gitignore.io or list available templates",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.RequireArgs(args, "Missing template name(s). Use 'ignore list' to see available templates.")
+			if err := utils.RequireArgs(args, "missing template name(s), use 'ignore list' to see available templates"); err != nil {
+				return err
+			}
 			if strings.ToLower(args[0]) == "list" {
 				return listGitignoreTemplates()
 			}
@@ -26,37 +27,40 @@ func NewIgnoreCommand() *cobra.Command {
 
 func downloadGitignore(templates string) error {
 	url := fmt.Sprintf("https://www.toptal.com/developers/gitignore/api/%s", templates)
-	return utils.HTTPRequest(url, func(resp *http.Response) error {
-		if resp.StatusCode == 200 {
-			body, err := utils.ReadBody(resp)
-			if err != nil {
-				return err
-			}
-			if err := os.WriteFile(".gitignore", []byte(body), 0644); err != nil {
-				return err
-			}
-			fmt.Printf("Downloaded .gitignore for %s\n", templates)
-		} else {
-			fmt.Fprintf(os.Stderr, "Error: HTTP %d from gitignore.io\n", resp.StatusCode)
-			os.Exit(1)
-		}
-		return nil
-	})
+	resp, err := utils.HTTPGet(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("HTTP %d from gitignore.io", resp.StatusCode)
+	}
+	body, err := utils.ReadBody(resp)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(".gitignore", body, 0644); err != nil {
+		return err
+	}
+	fmt.Printf("Downloaded .gitignore for %s\n", templates)
+	return nil
 }
 
 func listGitignoreTemplates() error {
 	url := "https://www.toptal.com/developers/gitignore/api/list?format=lines"
-	return utils.HTTPRequest(url, func(resp *http.Response) error {
-		if resp.StatusCode == 200 {
-			body, err := utils.ReadBody(resp)
-			if err != nil {
-				return err
-			}
-			fmt.Println("Available gitignore templates:")
-			fmt.Print(body)
-		} else {
-			fmt.Fprintf(os.Stderr, "Error fetching list. HTTP %d\n", resp.StatusCode)
-		}
-		return nil
-	})
+	resp, err := utils.HTTPGet(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("error fetching list: HTTP %d", resp.StatusCode)
+	}
+	body, err := utils.ReadBody(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Available gitignore templates:")
+	fmt.Print(string(body))
+	return nil
 }

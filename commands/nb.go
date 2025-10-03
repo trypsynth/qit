@@ -12,7 +12,9 @@ func NewNbCommand() *cobra.Command {
 		Use:   "nb <branch_name>",
 		Short: "switch to the branch with  the specified name, creating it if it doesn't exist",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.RequireArgs(args, "Missing branch name.")
+			if err := utils.RequireArgs(args, "missing branch name"); err != nil {
+				return err
+			}
 			name := args[0]
 			current, err := utils.CurrentBranch()
 			if err != nil {

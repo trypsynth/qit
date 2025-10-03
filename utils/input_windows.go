@@ -1,20 +1,23 @@
 //go:build windows
-// +build windows
 
 package utils
 
 import (
 	"fmt"
-	"syscall"
+
+	"golang.org/x/sys/windows"
 )
 
 var (
-	msvcrt    = syscall.NewLazyDLL("msvcrt.dll")
+	msvcrt    = windows.NewLazySystemDLL("msvcrt.dll")
 	procGetch = msvcrt.NewProc("_getch")
 )
 
-func PromptForKey(prompt string) rune {
+func PromptForKey(prompt string) (rune, error) {
 	fmt.Print(prompt)
-	ret, _, _ := procGetch.Call()
-	return rune(ret)
+	ret, _, err := procGetch.Call()
+	if ret == 0 {
+		return 0, fmt.Errorf("failed to read key: %w", err)
+	}
+	return rune(ret), nil
 }

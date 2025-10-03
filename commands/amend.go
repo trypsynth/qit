@@ -12,7 +12,9 @@ func NewAmendCommand() *cobra.Command {
 		Use:   "amend <message>",
 		Short: "amend the last commit with a new message",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.RequireArgs(args, "Missing new commit message.")
+			if err := utils.RequireArgs(args, "missing new commit message"); err != nil {
+				return err
+			}
 			message := strings.Join(args, " ")
 			return utils.Git(false, "commit", "--amend", "--reset", "-m", message)
 		},

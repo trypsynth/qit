@@ -12,7 +12,9 @@ func NewCpCommand() *cobra.Command {
 		Use:   "cp <message>",
 		Short: "commit changes to tracked files with the specified message, and push",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			utils.RequireArgs(args, "Missing commit message.")
+			if err := utils.RequireArgs(args, "missing commit message"); err != nil {
+				return err
+			}
 			message := strings.Join(args, " ")
 			if err := utils.Git(false, "commit", "-am", message); err != nil {
 				return err
