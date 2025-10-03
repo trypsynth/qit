@@ -32,6 +32,7 @@ Available commands:
 	rootCmd.AddCommand(commands.NewNewCommand())
 	rootCmd.AddCommand(commands.NewResetCommand())
 	rootCmd.AddCommand(commands.NewStatusCommand())
+	rootCmd.AddCommand(commands.NewSummaryCommand())
 	rootCmd.AddCommand(commands.NewUndoCommand())
 	rootCmd.SilenceUsage = true
 	if err := rootCmd.Execute(); err != nil {
