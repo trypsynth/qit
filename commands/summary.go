@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,13 +35,9 @@ func NewSummaryCommand() *cobra.Command {
 			for name, count := range authorCounts {
 				sorted = append(sorted, authorCount{name, count})
 			}
-			for i := 0; i < len(sorted); i++ {
-				for j := i + 1; j < len(sorted); j++ {
-					if sorted[j].count > sorted[i].count {
-						sorted[i], sorted[j] = sorted[j], sorted[i]
-					}
-				}
-			}
+			sort.Slice(sorted, func(i, j int) bool {
+				return sorted[i].count > sorted[j].count
+			})
 			for _, ac := range sorted {
 				commitWord := "commits"
 				if ac.count == 1 {

@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +16,10 @@ const (
 	DateFormat   = "%Y-%m-%d %H:%M:%S"
 	UserAgent   = "qit-cli"
 )
+
+var httpClient = &http.Client{
+	Timeout: 30 * time.Second,
+}
 
 func Git(quiet bool, args ...string) error {
 	cmd := exec.Command("git", args...)
@@ -42,17 +45,15 @@ func HTTPGet(url string) (*http.Response, error) {
 }
 
 func HTTPGetWithHeaders(url string, headers map[string]string) (*http.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
+	req.Header.Set("User-Agent", UserAgent)
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch from %s: %w", url, err)
 	}
