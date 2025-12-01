@@ -16,7 +16,7 @@ func NewAmendCommand() *cobra.Command {
 				return err
 			}
 			message := strings.Join(args, " ")
-			return utils.Git(false, "commit", "--amend", "--reset", "-m", message)
+			return utils.Git(false, "commit", "--amend", "--reset-author", "-m", message)
 		},
 	}
 }
