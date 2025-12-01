@@ -14,7 +14,7 @@ import (
 const (
 	CommitFormat = "%h %an: %s (%ad)."
 	DateFormat   = "%Y-%m-%d %H:%M:%S"
-	UserAgent   = "qit-cli"
+	UserAgent    = "qit-cli"
 )
 
 var httpClient = &http.Client{

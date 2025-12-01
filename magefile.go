@@ -1,5 +1,4 @@
 //go:build mage
-// +build mage
 
 package main
 
@@ -72,4 +71,8 @@ func Install() error {
 
 func Fmt() error {
 	return sh.Run("go", "fmt", "./...")
+}
+
+func Vet() error {
+	return sh.Run("go", "vet", "./...")
 }
