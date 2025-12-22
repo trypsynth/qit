@@ -11,14 +11,14 @@ import (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "qit",
-		Short: "Qit - Quin's tiny Git helper.",
-		Long:  "Qit - Quin's tiny Git helper.\nUsage: qit <command> [<args>...]",
+		Short: "Qit - Quin's little Git helper.",
+		Long:  "Qit - Quin's little Git helper.\nUsage: qit <command> [<args>...]",
 	}
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	rootCmd.SetHelpTemplate(`Qit - Quin's tiny Git helper.
+	rootCmd.SetHelpTemplate(`Qit - Quin's tiny Git helper
 Usage: qit <command> [<args>...]
 Available commands:
-{{range .Commands}}{{if (not .IsAvailableCommand)}}{{else}}  {{.Use}}: {{.Short}}.
+{{range .Commands}}{{if (not .IsAvailableCommand)}}{{else}}  {{.Use}}: {{.Short}}
 {{end}}{{end}}`)
 	rootCmd.AddCommand(commands.NewAcpCommand())
 	rootCmd.AddCommand(commands.NewAmendCommand())
