@@ -10,7 +10,7 @@ import (
 func NewNbCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "nb <branch_name>",
-		Short: "switch to the branch with the specified name, creating it if it doesn't exist",
+		Short: "switch to the specified branch, creating it if it doesn't exist",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := utils.RequireArgs(args, "missing branch name"); err != nil {
 				return err

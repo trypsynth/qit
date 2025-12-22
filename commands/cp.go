@@ -10,7 +10,7 @@ import (
 func NewCpCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "cp <message>",
-		Short: "commit changes to tracked files with the specified message, and push",
+		Short: "commit changes to tracked files with message and push",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := utils.RequireArgs(args, "missing commit message"); err != nil {
 				return err

@@ -11,7 +11,7 @@ import (
 func NewLastCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "last [<number>]",
-		Short: "show the last <number> commits (default: 1)",
+		Short: "show the last <number> commits. Defaults to 1",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			count := 1
