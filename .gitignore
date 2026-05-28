@@ -8,3 +8,4 @@
 vendor/
 go.work
 qit
+dist/

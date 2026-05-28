@@ -22,18 +22,23 @@ func Build() error {
 }
 
 func BuildAll() error {
+	if err := os.MkdirAll("dist", 0755); err != nil {
+		return err
+	}
 	platforms := []struct {
 		os   string
 		arch string
 		ext  string
 	}{
 		{"windows", "amd64", ".exe"},
+		{"windows", "arm64", ".exe"},
 		{"linux", "amd64", ""},
+		{"linux", "arm64", ""},
 		{"darwin", "amd64", ""},
 		{"darwin", "arm64", ""},
 	}
 	for _, p := range platforms {
-		binary := fmt.Sprintf("qit-%s-%s%s", p.os, p.arch, p.ext)
+		binary := filepath.Join("dist", fmt.Sprintf("qit-%s-%s%s", p.os, p.arch, p.ext))
 		env := map[string]string{
 			"GOOS":   p.os,
 			"GOARCH": p.arch,
@@ -46,23 +51,12 @@ func BuildAll() error {
 }
 
 func Clean() error {
-	patterns := []string{
-		"qit",
-		"qit.exe",
-		"qit-*",
-	}
-	for _, pattern := range patterns {
-		matches, err := filepath.Glob(pattern)
-		if err != nil {
+	for _, name := range []string{"qit", "qit.exe"} {
+		if err := os.Remove(name); err != nil && !os.IsNotExist(err) {
 			return err
 		}
-		for _, match := range matches {
-			if err := os.Remove(match); err != nil && !os.IsNotExist(err) {
-				return err
-			}
-		}
 	}
-	return nil
+	return os.RemoveAll("dist")
 }
 
 func Install() error {
